@@ -1,6 +1,52 @@
 # Blacklight Query
+This fork modifies the [main Blacklight Query](https://github.com/the-markup/blacklight-query) behavior so that, instead of outputting a full inspection report and screenshots, **it only outputs the non-duplicated number of cookies and third-party trackers detected for each scanned website listed in `urls.txt`**.
 
-A command-line tool to fetch [Blacklight](https://themarkup.org/series/blacklight) scans for a list of urls. Directly queries the open-source [Blacklight Collector](https://github.com/the-markup/blacklight-collector) tool and runs entirely locally.
+The output is written to `output/baselinedata.json` and is used as `baselineData` for the comparative analysis graph in [graphics-blacklight-client](https://github.com/the-markup/graphics-blacklight-client).
+
+## Output
+
+The generated `baselinedata.json` file contains an array of summarized results in the following format:
+
+
+
+Example Output:
+```json
+[
+  {
+    "website": "https://www.google.com",
+    "cookies": 5,
+    "trackers": 2
+  },
+  {
+    "website": "https://www.nytimes.com",
+    "cookies": 92,
+    "trackers": 94
+  }
+]
+```
+
+## Rationale and Implementation Details
+
+### Why This Change Was Made
+
+The inspection report generated directly by [**Blacklight Collector**](https://github.com/the-markup/blacklight-collector) does **not** include the logic for deduplicating cookies and third-party trackers. Deduplication is instead implemented in [**blacklight-lambda**](https://github.com/the-markup/blacklight-lambda).
+
+Because this fork only needs accurate **counts** of cookies and third-party trackers (rather than full inspection artifacts), relying on the raw collector output would produce inflated or inconsistent numbers.
+
+To preserve the existing deduplication logic, this fork routes inspections through **blacklight-lambda** rather than invoking the collector directly.
+
+---
+
+### Where the Modification Was Made
+
+The modification replaces direct calls to the `collect()` function in **blacklight-collector** with requests to the Blacklight API endpoint exposed by **blacklight-lambda**.
+
+Specifically:
+
+- Instead of calling `collect()` locally in [`main.ts`](https://github.com/FrankYiquan/frank-baseLineResults/blob/main/src/main.ts)
+- The query now sends inspection requests to the Express-wrapped API endpoint in **blacklight-lambda**
+- The lambda executes the inspection, applies cookie and third-party tracker deduplication, and returns deduplicated results.
+
 
 ## Prerequisites
 
@@ -11,6 +57,27 @@ A command-line tool to fetch [Blacklight](https://themarkup.org/series/blackligh
 
 - `nvm use`
 - `npm install`
+- ## Set up Lambda Express Server
+
+    1. Refer to the `README` at [**blacklight-lambda**](https://github.com/the-markup/blacklight-lambda) to set up the local Lambda Express server.  
+        - This setup is **exactly the same** as the local Lambda Express server used by **graphics-blacklight-client**.
+        - You can change the parameter when calling lambda express API in `main.ts`
+            ```json
+            // these are the default values in blacklight-lambda
+            // one tradeoff is that we no longer able to set the numPages, which use default value of 1 in blacklight-lambda
+            {
+                device: "mobile", 
+                location: "us-oh",
+                force: false
+            }
+            ```
+
+    2. Paste the Lambda Express API URL into `src/config.ts`:
+
+    ```ts
+    // example
+    export const DEFAULT_API_URL = "http://localhost:1980";
+    ```
 - `./blacklight-query urls.txt` where `urls.txt` has newline-separated absolute URLs to scan
 
 ## Inputs
@@ -31,31 +98,6 @@ You can also pipe your list of URLs.
 - `echo "https://themarkup.org/" | ./blacklight-query`
 - `./blacklight-query < urls.txt`
 
-### Collector Options
-
-All of the [`blacklight-collector`](https://github.com/the-markup/blacklight-collector?tab=readme-ov-file#collector-configuration) options can be specified using this tool, by editing the `config` object in `main.ts`.
-
-Out of the box, this tool sets the following options:
-
-- `headless: true`, this sets the collector to use a headless, behind-the-scenes browser
-- `outDir: ./outputs/[URL]`, specifies which directory the collector should store its results in. Makes use of the url being scanned
-- `numPages: 0`, tells the collector not to scan an additional page. Setting this to `1`, `2`, or `3` scans that number of randomly chosen pages that are accessible from the homepage
-
-Some other options you may find useful are:
-
-- `emulateDevice`, this specifies which device the collector should scan as
-- `headers`, allows you to set custom headers on the headless browser
-
-Read the [`blacklight-collector` README](https://github.com/the-markup/blacklight-collector/) for a full list of options and their defaults.
-
-## Outputs
-
-All scans will be saved in the `outputs` folder, in subdirectories named for the hostname of the url being scanned.
-
 ## Notes
 
-Be aware that the Collector is fairly resource-heavy, and may slow down your computer. We recommend scanning smaller lists if hardware becomes overtaxed.
-
-## Testing
-
-`npm run test`
+Be aware that the lambda is fairly resource-heavy, and may slow down your computer. We recommend scanning smaller lists if hardware becomes overtaxed.
