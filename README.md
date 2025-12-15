@@ -64,13 +64,14 @@ Specifically:
         - You can change the parameter when calling lambda express API in `main.ts`
             ```ts
             // these are the default values in blacklight-lambda
-            // one tradeoff is that we no longer able to set the numPages, which use default value of 1 in blacklight-lambda
+            // numPages: use default value of 1 in blacklight-lambda
             {
                 device: "mobile", 
                 location: "us-oh",
                 force: false
             }
             ```
+        - To change other parameters, do it in [**blacklight-lambda**](https://github.com/the-markup/blacklight-lambda/blob/main/src-api-lambda/api.js)
 
     2. Paste the Lambda Express API URL into `src/config.ts`:
 
@@ -79,6 +80,8 @@ Specifically:
     export const DEFAULT_API_URL = "http://localhost:1980";
     ```
 - `./blacklight-query urls.txt` where `urls.txt` has newline-separated absolute URLs to scan
+-  ## Used Output in graphics-blacklight-client
+    1. Paste the output into [graphics-blacklight-client](src/blacklight-client/data/baselineData.js)
 
 ## Inputs
 
