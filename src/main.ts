@@ -2,13 +2,19 @@ import * as fs from "fs";
 import * as progress from "ts-progress";
 import { join } from "path";
 import { exit } from "process";
-import { collect } from "@themarkup/blacklight-collector";
+import { fetchInspection } from "./fetchInspection";
 import { reportFailures } from "./utils";
+import { BaselineResult } from "./types";
 
-// Gather URLs from input file
 const urlsFile = process.argv[2];
-let urlsPath;
-if (urlsFile[0] == '/' || urlsFile[0] == '~') {
+
+if (!urlsFile) {
+  console.error("Usage: ts-node baseline.ts <urls.txt>");
+  exit(1);
+}
+
+let urlsPath: string;
+if (urlsFile.startsWith("/") || urlsFile.startsWith("~")) {
   urlsPath = urlsFile;
 } else {
   urlsPath = join(process.cwd(), urlsFile);
@@ -18,50 +24,62 @@ if (!fs.existsSync(urlsPath)) {
   console.log(`Could not find ${urlsPath}.`);
   exit(1);
 }
+
 const urls = fs.readFileSync(urlsPath, "utf8");
-const urlsList = urls.trim().split(/\r?\n|\r|\n/g);
-const outDir = "../outputs";
+const urlsList = urls
+  .trim()
+  .split(/\r?\n|\r|\n/g)
+  .filter(Boolean);
 
-let progressBar = progress.create({ total: urlsList.length });
+// the output file is alaways at ../outputs/baselinedata.json
+const outDir = join(__dirname, "../outputs");
+const baselineOutputPath = join(outDir, "baselinedata.json");
 
-let failedUrls: string[] = [];
-
-// Make output directory
-if (!fs.existsSync(join(__dirname, outDir))) {
-  fs.mkdirSync(join(__dirname, outDir));
+if (!fs.existsSync(outDir)) {
+  fs.mkdirSync(outDir, { recursive: true });
 }
 
-// Gather scans
+const progressBar = progress.create({ total: urlsList.length });
+
+const failedUrls: string[] = [];
+const BaselineResults: BaselineResult[] = []; //output values
+
 (async () => {
-  for (let url of urlsList) {
+  for (const url of urlsList) {
     console.log(`Scanning ${url} ...`);
-    const urlObj = new URL(url);
-    let folderStructure = `${outDir}/${urlObj.hostname}`;
-
-    if (fs.existsSync(join(__dirname, folderStructure))) {
-      const timestamp = Date.now();
-      folderStructure += `-${timestamp}`;
-    }
-
-    const config = {
-      headless: true,
-      outDir: join(__dirname, folderStructure),
-      numPages: 0,
-    };
 
     try {
-      await collect(url, config);
-    } catch (err) {
-      console.log(`${url} failed with error ${err}`);
-      failedUrls.push(url);
-      fs.rmSync(join(__dirname, folderStructure), {
-        recursive: true,
-        force: true,
+      const data = await fetchInspection(url, {
+        device: "mobile",   // match frontend default
+        location: "us-oh",
+        force: false
       });
+
+      // we only interest in number of cookies and 3rd-party trackers
+      const cookiesCounts = data?.groups?.[0]?.cards?.[1]?.bigNumber ?? 0;
+      const trackersCounts = data?.groups?.[0]?.cards?.[0]?.bigNumber ?? 0;
+
+      BaselineResults.push({
+        website: url,
+        cookies: cookiesCounts,
+        trackers: trackersCounts
+      });
+
+    } catch (err) {
+      console.error(`${url} failed with error:`, err);
+      failedUrls.push(url);
     }
 
     progressBar.update();
   }
+
+  // write output
+  fs.writeFileSync(
+    baselineOutputPath,
+    JSON.stringify(BaselineResults, null, 2),
+    "utf8"
+  );
+  console.log(`\nBaseline data written to: ${baselineOutputPath}`);
 
   reportFailures(failedUrls, urlsList.length);
 })();

@@ -1,0 +1,1 @@
+export const DEFAULT_API_URL = "http://localhost:1980";
