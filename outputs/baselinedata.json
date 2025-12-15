@@ -1,0 +1,102 @@
+[
+  {
+    "website": "https://www.google.com",
+    "cookies": 0,
+    "trackers": 1
+  },
+  {
+    "website": "https://www.youtube.com",
+    "cookies": 0,
+    "trackers": 3
+  },
+  {
+    "website": "https://open.spotify.com",
+    "cookies": 7,
+    "trackers": 9
+  },
+  {
+    "website": "https://www.amazon.com",
+    "cookies": 0,
+    "trackers": 34
+  },
+  {
+    "website": "https://www.yahoo.com",
+    "cookies": 126,
+    "trackers": 77
+  },
+  {
+    "website": "https://www.reddit.com",
+    "cookies": 4,
+    "trackers": 6
+  },
+  {
+    "website": "https://www.nike.com",
+    "cookies": 16,
+    "trackers": 15
+  },
+  {
+    "website": "https://www.macys.com",
+    "cookies": 5,
+    "trackers": 56
+  },
+  {
+    "website": "https://www.wikipedia.org",
+    "cookies": 0,
+    "trackers": 5
+  },
+  {
+    "website": "https://www.weather.com",
+    "cookies": 141,
+    "trackers": 84
+  },
+  {
+    "website": "https://www.ebay.com",
+    "cookies": 0,
+    "trackers": 11
+  },
+  {
+    "website": "https://www.imdb.com",
+    "cookies": 137,
+    "trackers": 76
+  },
+  {
+    "website": "https://www.espn.com",
+    "cookies": 2,
+    "trackers": 25
+  },
+  {
+    "website": "https://www.booking.com",
+    "cookies": 3,
+    "trackers": 14
+  },
+  {
+    "website": "https://www.chatgpt.com",
+    "cookies": 2,
+    "trackers": 1
+  },
+  {
+    "website": "https://www.mms.com/en-us",
+    "cookies": 47,
+    "trackers": 17
+  },
+  {
+    "website": "https://www.airbnb.com",
+    "cookies": 3,
+    "trackers": 6
+  },
+  {
+    "website": "https://www.massgeneral.org",
+    "cookies": 5,
+    "trackers": 2
+  },
+  {
+    "website": "https://studentaid.gov",
+    "cookies": 5,
+    "trackers": 4
+  },
+  {
+    "website": "https://www.libertymutual.com",
+    "cookies": 24,
+    "trackers": 21
+  }
+]

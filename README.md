@@ -62,7 +62,7 @@ Specifically:
     1. Refer to the `README` at [**blacklight-lambda**](https://github.com/the-markup/blacklight-lambda) to set up the local Lambda Express server.  
         - This setup is **exactly the same** as the local Lambda Express server used by **graphics-blacklight-client**.
         - You can change the parameter when calling lambda express API in `main.ts`
-            ```json
+            ```ts
             // these are the default values in blacklight-lambda
             // one tradeoff is that we no longer able to set the numPages, which use default value of 1 in blacklight-lambda
             {
